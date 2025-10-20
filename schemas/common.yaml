@@ -1,0 +1,68 @@
+# Common reusable schemas for OpenList API
+
+ApiResponse:
+  type: object
+  required:
+    - code
+    - message
+  properties:
+    code:
+      type: integer
+      description: HTTP status code
+      example: 200
+    message:
+      type: string
+      description: Response message
+      example: success
+    data:
+      description: Response payload (type varies by endpoint)
+
+ErrorResponse:
+  type: object
+  required:
+    - code
+    - message
+  properties:
+    code:
+      type: integer
+      description: Error code
+      example: 400
+    message:
+      type: string
+      description: Error message
+      example: Invalid request parameters
+    data:
+      type: object
+      nullable: true
+      example: null
+
+PageReq:
+  type: object
+  properties:
+    page:
+      type: integer
+      minimum: 1
+      default: 1
+      description: Page number (1-indexed)
+    per_page:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 30
+      description: Items per page
+
+Pagination:
+  type: object
+  properties:
+    total:
+      type: integer
+      description: Total number of items
+      example: 100
+    page:
+      type: integer
+      description: Current page number
+      example: 1
+    per_page:
+      type: integer
+      description: Items per page
+      example: 30

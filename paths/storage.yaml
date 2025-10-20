@@ -1,0 +1,346 @@
+# Storage Management (Admin only)
+
+/api/admin/storage/list:
+  get:
+    operationId: getAdminstoragelist
+    summary: List all storages (Admin)
+    description: Get list of all configured storage mounts
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          default: 30
+    responses:
+      '200':
+        description: Storages list retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/storage.yaml#/StoragesListResponse'
+      '403':
+        description: Forbidden - Admin required
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/storage/get:
+  get:
+    operationId: getAdminstorageget
+    summary: Get storage by ID (Admin)
+    description: Retrieve specific storage configuration
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Storage info retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/storage.yaml#/StorageResponse'
+      '404':
+        description: Storage not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/storage/create:
+  post:
+    operationId: postAdminstoragecreate
+    summary: Create storage (Admin)
+    description: Add a new storage mount
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - mount_path
+              - driver
+            properties:
+              mount_path:
+                type: string
+                example: /local
+              driver:
+                type: string
+                example: Local
+              order:
+                type: integer
+                default: 0
+              cache_expiration:
+                type: integer
+                default: 30
+              addition:
+                type: string
+                description: Driver-specific config (JSON string)
+              remark:
+                type: string
+    responses:
+      '200':
+        description: Storage created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid configuration or mount path already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/storage/update:
+  post:
+    operationId: postAdminstorageupdate
+    summary: Update storage (Admin)
+    description: Modify existing storage configuration
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: integer
+              - $ref: '../schemas/storage.yaml#/Storage'
+    responses:
+      '200':
+        description: Storage updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '404':
+        description: Storage not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/storage/delete:
+  post:
+    operationId: postAdminstoragedelete
+    summary: Delete storage (Admin)
+    description: Remove a storage mount
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+    responses:
+      '200':
+        description: Storage deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/storage/enable:
+  post:
+    operationId: postAdminstorageenable
+    summary: Enable storage (Admin)
+    description: Enable a disabled storage mount
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+    responses:
+      '200':
+        description: Storage enabled
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/storage/disable:
+  post:
+    operationId: postAdminstoragedisable
+    summary: Disable storage (Admin)
+    description: Temporarily disable a storage mount
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+    responses:
+      '200':
+        description: Storage disabled
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/storage/load_all:
+  post:
+    operationId: postAdminstorageload_all
+    summary: Reload all storages (Admin)
+    description: Force reload all storage mounts
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Storages reloaded
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/driver/list:
+  get:
+    operationId: getAdmindriverlist
+    summary: List all drivers (Admin)
+    description: Get list of available storage drivers with their configurations
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Drivers list retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../schemas/storage.yaml#/DriverInfo'
+
+/api/admin/driver/names:
+  get:
+    operationId: getAdmindrivernames
+    summary: Get driver names (Admin)
+    description: Get list of available driver names
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Driver names retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Local", "AliyunDrive", "OneDrive", "S3"]
+
+/api/admin/driver/info:
+  get:
+    operationId: getAdmindriverinfo
+    summary: Get driver info (Admin)
+    description: Get configuration schema for a specific driver
+    tags:
+      - Admin
+      - Storage
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: driver
+        in: query
+        required: true
+        schema:
+          type: string
+        example: Local
+    responses:
+      '200':
+        description: Driver info retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../schemas/storage.yaml#/DriverInfo'
+      '404':
+        description: Driver not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'

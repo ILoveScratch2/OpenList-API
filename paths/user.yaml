@@ -1,0 +1,513 @@
+# User Management
+
+/api/me:
+  get:
+    operationId: getMe
+    summary: Get current user info
+    description: Retrieve information about the currently authenticated user
+    tags:
+      - User
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: User info retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/user.yaml#/UserResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/me/update:
+  post:
+    operationId: postMeupdate
+    summary: Update current user
+    description: Update password or other settings for current user
+    tags:
+      - User
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              password:
+                type: string
+                description: New password
+              old_password:
+                type: string
+                description: Current password (required for password change)
+    responses:
+      '200':
+        description: User updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid request or wrong old password
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/me/sshkey/list:
+  get:
+    operationId: getMesshkeylist
+    summary: List my SSH public keys
+    description: Get list of SSH public keys for current user
+    tags:
+      - User
+      - SSH
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: SSH keys retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          name:
+                            type: string
+                          public_key:
+                            type: string
+                          created_at:
+                            type: string
+                            format: date-time
+
+/api/me/sshkey/add:
+  post:
+    operationId: postMesshkeyadd
+    summary: Add SSH public key
+    description: Add a new SSH public key for current user
+    tags:
+      - User
+      - SSH
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - name
+              - public_key
+            properties:
+              name:
+                type: string
+                description: Key name/label
+                example: my-laptop
+              public_key:
+                type: string
+                description: SSH public key content
+                example: ssh-rsa AAAAB3NzaC1...
+    responses:
+      '200':
+        description: SSH key added successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid public key format
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/me/sshkey/delete:
+  post:
+    operationId: postMesshkeydelete
+    summary: Delete SSH public key
+    description: Remove an SSH public key from current user
+    tags:
+      - User
+      - SSH
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+                description: SSH key ID
+                example: 1
+    responses:
+      '200':
+        description: SSH key deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '404':
+        description: SSH key not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/user/list:
+  get:
+    operationId: getAdminuserlist
+    summary: List all users (Admin)
+    description: Get paginated list of all users
+    tags:
+      - Admin
+      - User
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 30
+    responses:
+      '200':
+        description: Users list retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/user.yaml#/UsersListResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '403':
+        description: Forbidden - Admin role required
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/user/get:
+  get:
+    operationId: getAdminuserget
+    summary: Get user by ID (Admin)
+    description: Retrieve specific user information
+    tags:
+      - Admin
+      - User
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
+        description: User ID
+    responses:
+      '200':
+        description: User info retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/user.yaml#/UserResponse'
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/user/create:
+  post:
+    operationId: postAdminusercreate
+    summary: Create new user (Admin)
+    description: Create a new user account
+    tags:
+      - Admin
+      - User
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+                example: newuser
+              password:
+                type: string
+                example: password123
+              base_path:
+                type: string
+                default: /
+              role:
+                type: integer
+                description: "0=General, 1=Guest, 2=Admin"
+                default: 0
+              permission:
+                type: integer
+                description: Permission bitmap
+                default: 0
+              disabled:
+                type: boolean
+                default: false
+    responses:
+      '200':
+        description: User created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid request or username already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/user/update:
+  post:
+    operationId: postAdminuserupdate
+    summary: Update user (Admin)
+    description: Update user information
+    tags:
+      - Admin
+      - User
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+              username:
+                type: string
+              password:
+                type: string
+              base_path:
+                type: string
+              role:
+                type: integer
+              permission:
+                type: integer
+              disabled:
+                type: boolean
+    responses:
+      '200':
+        description: User updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/user/delete:
+  post:
+    operationId: postAdminuserdelete
+    summary: Delete user (Admin)
+    description: Delete a user account
+    tags:
+      - Admin
+      - User
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+                description: User ID to delete
+    responses:
+      '200':
+        description: User deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Cannot delete admin user
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/admin/user/cancel_2fa:
+  post:
+    operationId: postAdminusercancel_2fa
+    summary: Cancel user 2FA (Admin)
+    description: Disable 2FA for a specific user
+    tags:
+      - Admin
+      - User
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+                description: User ID
+    responses:
+      '200':
+        description: 2FA cancelled successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/user/del_cache:
+  post:
+    operationId: postAdminuserdel_cache
+    summary: Clear user cache (Admin)
+    description: Clear cached data for a specific user
+    tags:
+      - Admin
+      - User
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - username
+            properties:
+              username:
+                type: string
+    responses:
+      '200':
+        description: User cache cleared
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/user/sshkey/list:
+  get:
+    operationId: getAdminusersshkeylist
+    summary: List user SSH keys (Admin)
+    description: Get SSH keys for any user
+    tags:
+      - Admin
+      - User
+      - SSH
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: user_id
+        in: query
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: SSH keys retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: object
+
+/api/admin/user/sshkey/delete:
+  post:
+    operationId: postAdminusersshkeydelete
+    summary: Delete user SSH key (Admin)
+    description: Delete SSH key for any user
+    tags:
+      - Admin
+      - User
+      - SSH
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+                description: SSH key ID
+    responses:
+      '200':
+        description: SSH key deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'

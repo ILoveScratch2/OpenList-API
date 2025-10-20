@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: OpenList API
+  description: |
+    Welcome to the **OpenList Project API documentation**!
+
+    OpenList is a resilient, community-driven fork of AList, built to ensure long-term freedom and trust in open-source file listing systems amid the Open Source Trust Crisis.
+    
+    **GitHub Repository**: https://github.com/OpenListTeam/OpenList
+
+    
+    ## Authentication
+    
+    Most endpoints require JWT authentication. Include the token in the Authorization header:
+    ```
+    Authorization: <token>
+    ```
+    
+    Obtain a token via `/api/auth/login` endpoint.
+    
+    ## Response Format
+    
+    All responses follow this structure:
+    ```json
+    {
+      "code": 200,
+      "message": "success",
+      "data": {}
+    }
+    ```
+    
+    Error responses:
+    ```json
+    {
+      "code": 400,
+      "message": "error message",
+      "data": null
+    }
+    ```
+    
+  version: 0.0.1
+  contact:
+    name: OpenList Team
+    url: https://github.com/OpenListTeam/OpenList
+  license:
+    name: AGPL-3.0
+    url: https://github.com/OpenListTeam/OpenList/blob/main/LICENSE
+
+servers:
+  - url: https://openlist.example.oplist.org
+    description: Production server
+  - url: http://localhost:5244
+    description: Local development server (for testing)
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: User
+    description: User account management
+  - name: File System
+    description: File and directory operations (core functionality)
+  - name: Storage
+    description: Storage provider management (admin)
+  - name: Admin
+    description: System administration endpoints
+  - name: Sharing
+    description: File sharing functionality
+  - name: Public
+    description: Public endpoints (no auth required)
+  - name: SSH
+    description: SSH key management
+  - name: Two-Factor Authentication
+    description: 2FA/TOTP management
+  - name: Single Sign-On
+    description: SSO integration
+  - name: WebAuthn
+    description: WebAuthn/FIDO2/Passkey authentication
+  - name: Settings
+    description: System settings management
+  - name: Meta
+    description: Path metadata configuration
+  - name: Search Index
+    description: Full-text search indexing
+  - name: Offline Download
+    description: Offline download tasks
+  - name: Archive
+    description: Archive file operations
+
+paths:
+  # Authentication
+  /api/auth/login:
+    $ref: './paths/auth.yaml#/~1api~1auth~1login'
+  /api/auth/login/hash:
+    $ref: './paths/auth.yaml#/~1api~1auth~1login~1hash'
+  /api/auth/login/ldap:
+    $ref: './paths/auth.yaml#/~1api~1auth~1login~1ldap'
+  /api/auth/logout:
+    $ref: './paths/auth.yaml#/~1api~1auth~1logout'
+  /api/auth/2fa/generate:
+    $ref: './paths/auth.yaml#/~1api~1auth~12fa~1generate'
+  /api/auth/2fa/verify:
+    $ref: './paths/auth.yaml#/~1api~1auth~12fa~1verify'
+  /api/auth/sso:
+    $ref: './paths/auth.yaml#/~1api~1auth~1sso'
+  /api/auth/sso_callback:
+    $ref: './paths/auth.yaml#/~1api~1auth~1sso_callback'
+  /api/authn/webauthn_begin_login:
+    $ref: './paths/auth.yaml#/~1api~1authn~1webauthn_begin_login'
+  /api/authn/webauthn_finish_login:
+    $ref: './paths/auth.yaml#/~1api~1authn~1webauthn_finish_login'
+  /api/authn/webauthn_begin_registration:
+    $ref: './paths/auth.yaml#/~1api~1authn~1webauthn_begin_registration'
+  /api/authn/webauthn_finish_registration:
+    $ref: './paths/auth.yaml#/~1api~1authn~1webauthn_finish_registration'
+  /api/authn/delete_authn:
+    $ref: './paths/auth.yaml#/~1api~1authn~1delete_authn'
+  /api/authn/getcredentials:
+    $ref: './paths/auth.yaml#/~1api~1authn~1getcredentials'
+
+  # User Management
+  /api/me:
+    $ref: './paths/user.yaml#/~1api~1me'
+  /api/me/update:
+    $ref: './paths/user.yaml#/~1api~1me~1update'
+  /api/me/sshkey/list:
+    $ref: './paths/user.yaml#/~1api~1me~1sshkey~1list'
+  /api/me/sshkey/add:
+    $ref: './paths/user.yaml#/~1api~1me~1sshkey~1add'
+  /api/me/sshkey/delete:
+    $ref: './paths/user.yaml#/~1api~1me~1sshkey~1delete'
+  /api/admin/user/list:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1list'
+  /api/admin/user/get:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1get'
+  /api/admin/user/create:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1create'
+  /api/admin/user/update:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1update'
+  /api/admin/user/delete:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1delete'
+  /api/admin/user/cancel_2fa:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1cancel_2fa'
+  /api/admin/user/del_cache:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1del_cache'
+  /api/admin/user/sshkey/list:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1sshkey~1list'
+  /api/admin/user/sshkey/delete:
+    $ref: './paths/user.yaml#/~1api~1admin~1user~1sshkey~1delete'
+
+  # File System
+  /api/fs/list:
+    $ref: './paths/fs.yaml#/~1api~1fs~1list'
+  /api/fs/get:
+    $ref: './paths/fs.yaml#/~1api~1fs~1get'
+  /api/fs/search:
+    $ref: './paths/fs.yaml#/~1api~1fs~1search'
+  /api/fs/dirs:
+    $ref: './paths/fs.yaml#/~1api~1fs~1dirs'
+  /api/fs/other:
+    $ref: './paths/fs.yaml#/~1api~1fs~1other'
+  /api/fs/mkdir:
+    $ref: './paths/fs.yaml#/~1api~1fs~1mkdir'
+  /api/fs/rename:
+    $ref: './paths/fs.yaml#/~1api~1fs~1rename'
+  /api/fs/batch_rename:
+    $ref: './paths/fs.yaml#/~1api~1fs~1batch_rename'
+  /api/fs/regex_rename:
+    $ref: './paths/fs.yaml#/~1api~1fs~1regex_rename'
+  /api/fs/move:
+    $ref: './paths/fs.yaml#/~1api~1fs~1move'
+  /api/fs/recursive_move:
+    $ref: './paths/fs.yaml#/~1api~1fs~1recursive_move'
+  /api/fs/copy:
+    $ref: './paths/fs.yaml#/~1api~1fs~1copy'
+  /api/fs/remove:
+    $ref: './paths/fs.yaml#/~1api~1fs~1remove'
+  /api/fs/remove_empty_directory:
+    $ref: './paths/fs.yaml#/~1api~1fs~1remove_empty_directory'
+  /api/fs/put:
+    $ref: './paths/fs.yaml#/~1api~1fs~1put'
+  /api/fs/form:
+    $ref: './paths/fs.yaml#/~1api~1fs~1form'
+  /api/fs/add_offline_download:
+    $ref: './paths/fs.yaml#/~1api~1fs~1add_offline_download'
+  /api/fs/archive/decompress:
+    $ref: './paths/fs.yaml#/~1api~1fs~1archive~1decompress'
+  /api/fs/archive/meta:
+    $ref: './paths/fs.yaml#/~1api~1fs~1archive~1meta'
+  /api/fs/archive/list:
+    $ref: './paths/fs.yaml#/~1api~1fs~1archive~1list'
+
+  # Storage Management
+  /api/admin/storage/list:
+    $ref: './paths/storage.yaml#/~1api~1admin~1storage~1list'
+  /api/admin/storage/get:
+    $ref: './paths/storage.yaml#/~1api~1admin~1storage~1get'
+  /api/admin/storage/create:
+    $ref: './paths/storage.yaml#/~1api~1admin~1storage~1create'
+  /api/admin/storage/update:
+    $ref: './paths/storage.yaml#/~1api~1admin~1storage~1update'
+  /api/admin/storage/delete:
+    $ref: './paths/storage.yaml#/~1api~1admin~1storage~1delete'
+  /api/admin/storage/enable:
+    $ref: './paths/storage.yaml#/~1api~1admin~1storage~1enable'
+  /api/admin/storage/disable:
+    $ref: './paths/storage.yaml#/~1api~1admin~1storage~1disable'
+  /api/admin/storage/load_all:
+    $ref: './paths/storage.yaml#/~1api~1admin~1storage~1load_all'
+  /api/admin/driver/list:
+    $ref: './paths/storage.yaml#/~1api~1admin~1driver~1list'
+  /api/admin/driver/names:
+    $ref: './paths/storage.yaml#/~1api~1admin~1driver~1names'
+  /api/admin/driver/info:
+    $ref: './paths/storage.yaml#/~1api~1admin~1driver~1info'
+
+  # Admin & Settings
+  /api/public/settings:
+    $ref: './paths/admin.yaml#/~1api~1public~1settings'
+  /api/public/offline_download_tools:
+    $ref: './paths/admin.yaml#/~1api~1public~1offline_download_tools'
+  /api/public/archive_extensions:
+    $ref: './paths/admin.yaml#/~1api~1public~1archive_extensions'
+  /api/admin/setting/list:
+    $ref: './paths/admin.yaml#/~1api~1admin~1setting~1list'
+  /api/admin/setting/get:
+    $ref: './paths/admin.yaml#/~1api~1admin~1setting~1get'
+  /api/admin/setting/save:
+    $ref: './paths/admin.yaml#/~1api~1admin~1setting~1save'
+  /api/admin/setting/delete:
+    $ref: './paths/admin.yaml#/~1api~1admin~1setting~1delete'
+  /api/admin/setting/reset_token:
+    $ref: './paths/admin.yaml#/~1api~1admin~1setting~1reset_token'
+  /api/admin/meta/list:
+    $ref: './paths/admin.yaml#/~1api~1admin~1meta~1list'
+  /api/admin/meta/get:
+    $ref: './paths/admin.yaml#/~1api~1admin~1meta~1get'
+  /api/admin/meta/create:
+    $ref: './paths/admin.yaml#/~1api~1admin~1meta~1create'
+  /api/admin/meta/update:
+    $ref: './paths/admin.yaml#/~1api~1admin~1meta~1update'
+  /api/admin/meta/delete:
+    $ref: './paths/admin.yaml#/~1api~1admin~1meta~1delete'
+  /api/admin/index/build:
+    $ref: './paths/admin.yaml#/~1api~1admin~1index~1build'
+  /api/admin/index/update:
+    $ref: './paths/admin.yaml#/~1api~1admin~1index~1update'
+  /api/admin/index/stop:
+    $ref: './paths/admin.yaml#/~1api~1admin~1index~1stop'
+  /api/admin/index/clear:
+    $ref: './paths/admin.yaml#/~1api~1admin~1index~1clear'
+  /api/admin/index/progress:
+    $ref: './paths/admin.yaml#/~1api~1admin~1index~1progress'
+
+  # Sharing
+  /api/share/list:
+    $ref: './paths/sharing.yaml#/~1api~1share~1list'
+  /api/share/get:
+    $ref: './paths/sharing.yaml#/~1api~1share~1get'
+  /api/share/create:
+    $ref: './paths/sharing.yaml#/~1api~1share~1create'
+  /api/share/update:
+    $ref: './paths/sharing.yaml#/~1api~1share~1update'
+  /api/share/delete:
+    $ref: './paths/sharing.yaml#/~1api~1share~1delete'
+  /api/share/enable:
+    $ref: './paths/sharing.yaml#/~1api~1share~1enable'
+  /api/share/disable:
+    $ref: './paths/sharing.yaml#/~1api~1share~1disable'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from login endpoint.
+        Include the token directly (without "Bearer" prefix) in Authorization header.
+
+  schemas:
+    # Common schemas
+    ApiResponse:
+      $ref: './schemas/common.yaml#/ApiResponse'
+    ErrorResponse:
+      $ref: './schemas/common.yaml#/ErrorResponse'
+    PageReq:
+      $ref: './schemas/common.yaml#/PageReq'
+    Pagination:
+      $ref: './schemas/common.yaml#/Pagination'
+    
+    # User schemas
+    User:
+      $ref: './schemas/user.yaml#/User'
+    LoginRequest:
+      $ref: './schemas/user.yaml#/LoginRequest'
+    LoginResponse:
+      $ref: './schemas/user.yaml#/LoginResponse'
+    UserResponse:
+      $ref: './schemas/user.yaml#/UserResponse'
+    UsersListResponse:
+      $ref: './schemas/user.yaml#/UsersListResponse'
+    
+    # File System schemas
+    FsObject:
+      $ref: './schemas/fs.yaml#/FsObject'
+    FsListRequest:
+      $ref: './schemas/fs.yaml#/FsListRequest'
+    FsListResponse:
+      $ref: './schemas/fs.yaml#/FsListResponse'
+    FsGetRequest:
+      $ref: './schemas/fs.yaml#/FsGetRequest'
+    FsGetResponse:
+      $ref: './schemas/fs.yaml#/FsGetResponse'
+    FsMkdirRequest:
+      $ref: './schemas/fs.yaml#/FsMkdirRequest'
+    FsRenameRequest:
+      $ref: './schemas/fs.yaml#/FsRenameRequest'
+    FsMoveCopyRequest:
+      $ref: './schemas/fs.yaml#/FsMoveCopyRequest'
+    FsRemoveRequest:
+      $ref: './schemas/fs.yaml#/FsRemoveRequest'
+    StorageDetails:
+      $ref: './schemas/fs.yaml#/StorageDetails'
+    
+    # Storage schemas
+    Storage:
+      $ref: './schemas/storage.yaml#/Storage'
+    DriverInfo:
+      $ref: './schemas/storage.yaml#/DriverInfo'
+    StorageResponse:
+      $ref: './schemas/storage.yaml#/StorageResponse'
+    StoragesListResponse:
+      $ref: './schemas/storage.yaml#/StoragesListResponse'
+
+security:
+  - BearerAuth: []

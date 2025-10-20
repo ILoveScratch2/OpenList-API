@@ -1,0 +1,11 @@
+extends:
+  - recommended
+
+rules:
+  operation-operationId: warn
+  operation-4xx-response: warn
+  no-server-example.com: off
+  no-server-trailing-slash: error
+  
+servers:
+  allowLocalhost: true

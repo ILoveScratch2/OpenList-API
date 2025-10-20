@@ -1,0 +1,266 @@
+# File Sharing
+
+/api/share/list:
+  post:
+    operationId: postSharelist
+    summary: List all shares
+    description: Get paginated list of file shares created by current user
+    tags:
+      - Sharing
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../schemas/common.yaml#/PageReq'
+    responses:
+      '200':
+        description: Shares list retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        content:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              path:
+                                type: string
+                              expiration:
+                                type: string
+                                format: date-time
+                              created_at:
+                                type: string
+                                format: date-time
+                        total:
+                          type: integer
+
+/api/share/get:
+  get:
+    operationId: getShareget
+    summary: Get share by ID
+    description: Retrieve specific share information
+    tags:
+      - Sharing
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Share ID
+    responses:
+      '200':
+        description: Share info retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        path:
+                          type: string
+                        password:
+                          type: string
+                        expiration:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+
+/api/share/create:
+  post:
+    operationId: postSharecreate
+    summary: Create file share
+    description: Create a new shareable link for files/folders
+    tags:
+      - Sharing
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - paths
+            properties:
+              paths:
+                type: array
+                items:
+                  type: string
+                description: List of file/folder paths to share
+                example: ["/document.pdf", "/folder"]
+              password:
+                type: string
+                description: Optional password protection
+                example: ""
+              expiration:
+                type: string
+                format: date-time
+                description: Optional expiration date
+                example: "2025-12-31T23:59:59Z"
+    responses:
+      '200':
+        description: Share created successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Share ID
+                        url:
+                          type: string
+                          description: Share URL
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/share/update:
+  post:
+    operationId: postShareupdate
+    summary: Update share
+    description: Modify existing share configuration
+    tags:
+      - Sharing
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: string
+              password:
+                type: string
+              expiration:
+                type: string
+                format: date-time
+    responses:
+      '200':
+        description: Share updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/share/delete:
+  post:
+    operationId: postSharedelete
+    summary: Delete share
+    description: Remove a file share
+    tags:
+      - Sharing
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: string
+    responses:
+      '200':
+        description: Share deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/share/enable:
+  post:
+    operationId: postShareenable
+    summary: Enable share
+    description: Re-enable a disabled share
+    tags:
+      - Sharing
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: string
+    responses:
+      '200':
+        description: Share enabled
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/share/disable:
+  post:
+    operationId: postSharedisable
+    summary: Disable share
+    description: Temporarily disable a share
+    tags:
+      - Sharing
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: string
+    responses:
+      '200':
+        description: Share disabled
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'

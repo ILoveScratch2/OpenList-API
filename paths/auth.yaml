@@ -1,0 +1,463 @@
+# Authentication
+
+/api/auth/login:
+  post:
+    operationId: postAuthlogin
+    summary: User login
+    description: Authenticate user with username and password, returns JWT token
+    tags:
+      - Authentication
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/user.yaml#/LoginRequest'
+    responses:
+      '200':
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/user.yaml#/LoginResponse'
+      '400':
+        description: Invalid request or wrong credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/auth/login/hash:
+    post:
+      operationId: postAuthloginhash
+      summary: User login with pre-hashed password
+      description: Authenticate using username and pre-hashed password (SHA256)
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  description: SHA256 hash of password
+                  example: "hashed_password_string"
+                otp_code:
+                  type: string
+                  description: 2FA code if enabled
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/user.yaml#/LoginResponse'
+        '400':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/auth/login/ldap:
+  post:
+    operationId: postAuthloginldap
+    summary: LDAP login
+    description: Authenticate user via LDAP directory service
+    tags:
+      - Authentication
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/user.yaml#/LoginRequest'
+    responses:
+      '200':
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/user.yaml#/LoginResponse'
+      '400':
+        description: LDAP authentication failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/auth/logout:
+  get:
+    operationId: getAuthlogout
+    summary: User logout
+    description: Invalidate current session token
+    tags:
+      - Authentication
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Logout successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/auth/2fa/generate:
+  post:
+    operationId: postAuth2fagenerate
+    summary: Generate 2FA secret
+    description: Generate a new 2FA (TOTP) secret for current user
+    tags:
+      - Authentication
+      - Two-Factor Authentication
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: 2FA secret generated
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        qr_code:
+                          type: string
+                          description: Base64-encoded QR code image
+                        secret:
+                          type: string
+                          description: TOTP secret key
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/auth/2fa/verify:
+  post:
+    operationId: postAuth2faverify
+    summary: Verify and enable 2FA
+    description: Verify TOTP code and enable 2FA for current user
+    tags:
+      - Authentication
+      - Two-Factor Authentication
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                description: 6-digit TOTP code
+                example: "123456"
+    responses:
+      '200':
+        description: 2FA enabled successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid verification code
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/auth/sso:
+  get:
+    operationId: getAuthsso
+    summary: SSO login redirect
+    description: Redirect to configured SSO provider for authentication
+    tags:
+      - Authentication
+      - Single Sign-On
+    responses:
+      '302':
+        description: Redirect to SSO provider
+      '400':
+        description: SSO not configured
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/auth/sso_callback:
+  get:
+    operationId: getAuthsso_callback
+    summary: SSO callback handler
+    description: Handle callback from SSO provider after authentication
+    tags:
+      - Authentication
+      - Single Sign-On
+    parameters:
+      - name: code
+        in: query
+        description: Authorization code from SSO provider
+        required: true
+        schema:
+          type: string
+      - name: state
+        in: query
+        description: State parameter for CSRF protection
+        required: false
+        schema:
+          type: string
+    responses:
+      '200':
+        description: SSO login successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/user.yaml#/LoginResponse'
+      '400':
+        description: SSO callback failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/authn/webauthn_begin_login:
+  get:
+    operationId: getAuthnwebauthn_begin_login
+    summary: Begin WebAuthn login
+    description: Initiate WebAuthn (FIDO2/Passkey) authentication flow
+    tags:
+      - Authentication
+      - WebAuthn
+    parameters:
+      - name: username
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Username for WebAuthn login
+    responses:
+      '200':
+        description: WebAuthn challenge generated
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      description: WebAuthn credential request options
+      '400':
+        description: WebAuthn not enabled or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/authn/webauthn_finish_login:
+  post:
+    operationId: postAuthnwebauthn_finish_login
+    summary: Finish WebAuthn login
+    description: Complete WebAuthn authentication with signed challenge
+    tags:
+      - Authentication
+      - WebAuthn
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: WebAuthn credential assertion response
+    responses:
+      '200':
+        description: WebAuthn login successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/user.yaml#/LoginResponse'
+      '400':
+        description: WebAuthn verification failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/authn/webauthn_begin_registration:
+  get:
+    operationId: getAuthnwebauthn_begin_registration
+    summary: Begin WebAuthn registration
+    description: Start registering a new WebAuthn credential (requires authentication)
+    tags:
+      - Authentication
+      - WebAuthn
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: WebAuthn registration challenge generated
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      description: WebAuthn credential creation options
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/authn/webauthn_finish_registration:
+  post:
+    operationId: postAuthnwebauthn_finish_registration
+    summary: Finish WebAuthn registration
+    description: Complete WebAuthn credential registration
+    tags:
+      - Authentication
+      - WebAuthn
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: WebAuthn credential creation response
+    responses:
+      '200':
+        description: WebAuthn credential registered successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Registration failed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/authn/delete_authn:
+  post:
+    operationId: postAuthndelete_authn
+    summary: Delete WebAuthn credential
+    description: Remove a registered WebAuthn credential
+    tags:
+      - Authentication
+      - WebAuthn
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: string
+                description: Base64-encoded credential ID
+                example: "credential_id_base64"
+    responses:
+      '200':
+        description: Credential deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/authn/getcredentials:
+  get:
+    operationId: getAuthngetcredentials
+    summary: Get WebAuthn credentials
+    description: List all registered WebAuthn credentials for current user
+    tags:
+      - Authentication
+      - WebAuthn
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Credentials list retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            description: Base64-encoded credential ID
+                          created_at:
+                            type: string
+                            format: date-time
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'

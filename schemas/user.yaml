@@ -1,0 +1,114 @@
+# User-related schemas
+
+User:
+  type: object
+  properties:
+    id:
+      type: integer
+      description: User unique ID
+      example: 1
+    username:
+      type: string
+      description: Username
+      example: admin
+    password:
+      type: string
+      description: Password (empty on read)
+      example: ""
+    base_path:
+      type: string
+      description: User's base path
+      example: /
+    role:
+      type: integer
+      description: "User role: 0=General, 1=Guest, 2=Admin"
+      enum: [0, 1, 2]
+      example: 2
+    disabled:
+      type: boolean
+      description: Whether the user is disabled
+      example: false
+    permission:
+      type: integer
+      format: int32
+      description: |
+        Permission (in bit flags):
+        - Bit 0: Can see hidden files
+        - Bit 1: Can access without password
+        - Bit 2: Can add offline download tasks
+        - Bit 3: Can mkdir and upload
+        - Bit 4: Can rename
+        - Bit 5: Can move
+        - Bit 6: Can copy
+        - Bit 7: Can remove
+        - Bit 8: WebDAV read
+        - Bit 9: WebDAV write
+        - Bit 10: FTP/SFTP login and read
+        - Bit 11: FTP/SFTP write
+        - Bit 12: Can read archives
+        - Bit 13: Can decompress archives
+        - Bit 14: Can share
+      example: 29183
+    sso_id:
+      type: string
+      description: SSO platform ID
+      example: ""
+    otp:
+      type: boolean
+      description: Whether 2FA is enabled
+      example: false
+
+LoginRequest:
+  type: object
+  required:
+    - username
+    - password
+  properties:
+    username:
+      type: string
+      example: admin
+    password:
+      type: string
+      format: password
+      example: "my password"
+    otp_code:
+      type: string
+      description: Two-factor authentication code (if 2FA is enabled)
+      example: "123456"
+
+LoginResponse:
+  allOf:
+    - $ref: './common.yaml#/ApiResponse'
+    - type: object
+      properties:
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              description: JWT authentication token
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+UserResponse:
+  allOf:
+    - $ref: './common.yaml#/ApiResponse'
+    - type: object
+      properties:
+        data:
+          $ref: '#/User'
+
+UsersListResponse:
+  allOf:
+    - $ref: './common.yaml#/ApiResponse'
+    - type: object
+      properties:
+        data:
+          type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/User'
+            total:
+              type: integer
+              example: 5

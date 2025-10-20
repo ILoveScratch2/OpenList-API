@@ -1,0 +1,108 @@
+# Storage schemas
+
+Storage:
+  type: object
+  properties:
+    id:
+      type: integer
+      example: 1
+    mount_path:
+      type: string
+      description: Path where storage is mounted
+      example: /local
+    order:
+      type: integer
+      description: Display order
+      example: 0
+    driver:
+      type: string
+      description: Storage driver name
+      example: Local
+    cache_expiration:
+      type: integer
+      description: Cache expiration time in minutes
+      example: 30
+    status:
+      type: string
+      description: Storage status
+      enum: [work, error, disabled]
+      example: work
+    addition:
+      type: string
+      description: Driver-specific configuration (JSON string)
+      example: '{"root_folder_path":"D:\\files"}'
+    remark:
+      type: string
+      description: Storage description/notes
+      example: Local storage
+    modified:
+      type: string
+      format: date-time
+    disabled:
+      type: boolean
+      example: false
+    disable_index:
+      type: boolean
+      description: Disable search indexing for this storage
+      example: false
+    enable_sign:
+      type: boolean
+      description: Enable signature verification for downloads
+      example: false
+    order_by:
+      type: string
+      description: Default sort field
+      example: name
+    order_direction:
+      type: string
+      enum: [asc, desc]
+      example: asc
+    extract_folder:
+      type: string
+      description: Extract folder behavior
+      example: front
+    web_proxy:
+      type: boolean
+      example: false
+    webdav_policy:
+      type: string
+      enum: [native_proxy, 302_redirect, use_proxy_url]
+      example: native_proxy
+    down_proxy_url:
+      type: string
+      description: Proxy URL for downloads
+      example: ""
+
+DriverInfo:
+  type: object
+  properties:
+    name:
+      type: string
+      example: Local
+    config:
+      type: object
+      description: Driver configuration schema
+      additionalProperties: true
+
+StorageResponse:
+  allOf:
+    - $ref: './common.yaml#/ApiResponse'
+    - type: object
+      properties:
+        data:
+          $ref: '#/Storage'
+
+StoragesListResponse:
+  allOf:
+    - $ref: './common.yaml#/ApiResponse'
+    - type: object
+      properties:
+        data:
+          type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/Storage'
+            total:
+              type: integer

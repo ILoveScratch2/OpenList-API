@@ -1,0 +1,807 @@
+# File System
+
+/api/fs/list:
+  post:
+    operationId: postFslist
+    summary: List directory contents
+    description: Get list of files and directories at specified path with pagination
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsListRequest'
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsListRequest'
+    responses:
+      '200':
+        description: Directory listing retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/fs.yaml#/FsListResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '403':
+        description: Forbidden - insufficient permissions or wrong password
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '404':
+        description: Path not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/get:
+  post:
+    operationId: postFsget
+    summary: Get file or directory info
+    description: Retrieve metadata for a specific file or directory
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsGetRequest'
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsGetRequest'
+    responses:
+      '200':
+        description: File/directory info retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/fs.yaml#/FsGetResponse'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '404':
+        description: File not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/search:
+  post:
+    operationId: postFssearch
+    summary: Search files and directories
+    description: Search for files/folders by name (requires search index to be built)
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - parent
+              - keywords
+            properties:
+              parent:
+                type: string
+                description: Base path to search within
+                example: /
+              keywords:
+                type: string
+                description: Search query
+                example: document
+              scope:
+                type: integer
+                description: Search scope (0=current folder, 1=recursive)
+                default: 0
+              page:
+                type: integer
+                minimum: 1
+                default: 1
+              per_page:
+                type: integer
+                minimum: 1
+                default: 30
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        content:
+                          type: array
+                          items:
+                            $ref: '../schemas/fs.yaml#/FsObject'
+                        total:
+                          type: integer
+      '400':
+        description: Search index not enabled
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/dirs:
+    post:
+      operationId: postFsdirs
+      summary: Get directory tree
+      description: Retrieve directory structure (folders only) for navigation
+      tags:
+        - File System
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                path:
+                  type: string
+                  default: /
+                password:
+                  type: string
+                force_root:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Directory tree retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../schemas/common.yaml#/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            path:
+                              type: string
+
+/api/fs/other:
+  post:
+    operationId: postFsother
+    summary: Get additional file operations
+    description: Retrieve provider-specific operations available for a file/folder
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - path
+            properties:
+              path:
+                type: string
+                example: /file.txt
+              method:
+                type: string
+                description: Operation method name
+    responses:
+      '200':
+        description: Operations retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/fs/mkdir:
+  post:
+    operationId: postFsmkdir
+    summary: Create directory
+    description: Create a new directory at specified path
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsMkdirRequest'
+    responses:
+      '200':
+        description: Directory created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid path or directory already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/rename:
+  post:
+    operationId: postFsrename
+    summary: Rename file or directory
+    description: Rename a file or directory
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsRenameRequest'
+    responses:
+      '200':
+        description: Renamed successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/batch_rename:
+  post:
+    operationId: postFsbatch_rename
+    summary: Batch rename files
+    description: Rename multiple files using a pattern
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - src_dir
+              - rename_objects
+            properties:
+              src_dir:
+                type: string
+                description: Source directory
+                example: /folder
+              rename_objects:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    src_name:
+                      type: string
+                    new_name:
+                      type: string
+    responses:
+      '200':
+        description: Batch rename completed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/fs/regex_rename:
+  post:
+    operationId: postFsregex_rename
+    summary: Regex-based rename
+    description: Rename files using regular expression pattern matching
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - src_dir
+              - src_name_regex
+              - new_name_regex
+            properties:
+              src_dir:
+                type: string
+                example: /folder
+              src_name_regex:
+                type: string
+                description: Source name regex pattern
+                example: "^(.*)\\.(txt)$"
+              new_name_regex:
+                type: string
+                description: Replacement pattern
+                example: "$1_renamed.$2"
+    responses:
+      '200':
+        description: Regex rename completed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/fs/move:
+  post:
+    operationId: postFsmove
+    summary: Move files or directories
+    description: Move one or more files/folders to another location
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsMoveCopyRequest'
+    responses:
+      '200':
+        description: Moved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/recursive_move:
+  post:
+    operationId: postFsrecursive_move
+    summary: Recursive move
+    description: Move files/folders recursively (preserves directory structure)
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - src_dir
+              - dst_dir
+            properties:
+              src_dir:
+                type: string
+                example: /source
+              dst_dir:
+                type: string
+                example: /destination
+    responses:
+      '200':
+        description: Recursive move completed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/fs/copy:
+  post:
+    operationId: postFscopy
+    summary: Copy files or directories
+    description: Copy one or more files/folders to another location
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsMoveCopyRequest'
+    responses:
+      '200':
+        description: Copied successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/remove:
+  post:
+    operationId: postFsremove
+    summary: Remove files or directories
+    description: Delete one or more files or folders
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/fs.yaml#/FsRemoveRequest'
+    responses:
+      '200':
+        description: Removed successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/remove_empty_directory:
+  post:
+    operationId: postFsremove_empty_directory
+    summary: Remove empty directories
+    description: Recursively remove empty directories
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - src_dir
+            properties:
+              src_dir:
+                type: string
+                description: Starting directory path
+                example: /folder
+    responses:
+      '200':
+        description: Empty directories removed
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/fs/put:
+  put:
+    operationId: putFsput
+    summary: Upload file (stream)
+    description: Upload file using streaming (for large files or programmatic uploads)
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: path
+        in: header
+        required: true
+        description: Destination file path
+        schema:
+          type: string
+          example: /uploads/file.pdf
+      - name: As-Task
+        in: header
+        required: false
+        description: Upload as background task (true/false)
+        schema:
+          type: string
+          example: "false"
+      - name: Last-Modified
+        in: header
+        required: false
+        description: File modification time (Unix timestamp in milliseconds)
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/octet-stream:
+          schema:
+            type: string
+            format: binary
+    responses:
+      '200':
+        description: Upload successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/form:
+  put:
+    operationId: putFsform
+    summary: Upload file (form)
+    description: Upload file using multipart form data (for browser uploads)
+    tags:
+      - File System
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: path
+        in: header
+        required: true
+        description: Destination directory path
+        schema:
+          type: string
+          example: /uploads
+      - name: As-Task
+        in: header
+        required: false
+        description: Upload as background task
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+                description: File to upload
+    responses:
+      '200':
+        description: Upload successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/add_offline_download:
+  post:
+    operationId: postFsadd_offline_download
+    summary: Add offline download task
+    description: Create an offline download task (HTTP/magnet/torrent)
+    tags:
+      - File System
+      - Offline Download
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - path
+              - urls
+            properties:
+              path:
+                type: string
+                description: Destination path to save downloaded files
+                example: /downloads
+              urls:
+                type: array
+                items:
+                  type: string
+                description: List of URLs to download (HTTP/HTTPS/magnet)
+                example: ["https://example.com/file.zip"]
+              tool:
+                type: string
+                description: Preferred download tool (aria2/qbittorrent/transmission)
+                example: aria2
+    responses:
+      '200':
+        description: Download task created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '400':
+        description: Invalid request or offline download not configured
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/archive/decompress:
+  post:
+    operationId: postFsarchivedecompress
+    summary: Decompress archive
+    description: Extract archive file (zip/rar/7z/tar/tar.gz etc.)
+    tags:
+      - File System
+      - Archive
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - src_dir
+              - name
+              - dst_dir
+            properties:
+              src_dir:
+                type: string
+                description: Directory containing the archive
+                example: /archives
+              name:
+                type: string
+                description: Archive filename
+                example: archive.zip
+              dst_dir:
+                type: string
+                description: Destination directory for extraction
+                example: /extracted
+    responses:
+      '200':
+        description: Decompression started
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+      '403':
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+
+/api/fs/archive/meta:
+  post:
+    operationId: postFsarchivemeta
+    summary: Get archive metadata
+    description: Retrieve metadata of archive file without extracting
+    tags:
+      - File System
+      - Archive
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - path
+            properties:
+              path:
+                type: string
+                example: /archive.zip
+    responses:
+      '200':
+        description: Archive metadata retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        format:
+                          type: string
+                          example: zip
+                        encrypted:
+                          type: boolean
+                        total_files:
+                          type: integer
+
+/api/fs/archive/list:
+  post:
+    operationId: postFsarchivelist
+    summary: List archive contents
+    description: List files inside an archive without extracting
+    tags:
+      - File System
+      - Archive
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - path
+            properties:
+              path:
+                type: string
+                description: Path to archive file
+                example: /archive.zip
+              archive_path:
+                type: string
+                description: Path inside archive
+                default: /
+    responses:
+      '200':
+        description: Archive contents listed
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        content:
+                          type: array
+                          items:
+                            $ref: '../schemas/fs.yaml#/FsObject'
+                        total:
+                          type: integer

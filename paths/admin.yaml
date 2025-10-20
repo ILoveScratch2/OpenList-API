@@ -1,0 +1,484 @@
+# Admi related
+
+/api/public/settings:
+  get:
+    operationId: getPublicsettings
+    summary: Get public settings
+    description: Retrieve public system settings (no authentication required)
+    tags:
+      - Public
+      - Settings
+    responses:
+      '200':
+        description: Public settings retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      additionalProperties:
+                        type: string
+                      description: Key-value pairs of public settings
+
+/api/public/offline_download_tools:
+  get:
+    operationId: getPublicoffline_download_tools
+    summary: Get available offline download tools
+    description: List configured offline download tools (aria2, qbittorrent, etc.)
+    tags:
+      - Public
+    responses:
+      '200':
+        description: Available tools retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: string
+                      example: ["aria2", "qbittorrent"]
+
+/api/public/archive_extensions:
+  get:
+    operationId: getPublicarchive_extensions
+    summary: Get supported archive extensions
+    description: List archive file extensions that can be extracted
+    tags:
+      - Public
+    responses:
+      '200':
+        description: Archive extensions retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: string
+                      example: [".zip", ".rar", ".7z", ".tar", ".tar.gz"]
+
+/api/admin/setting/list:
+  get:
+    operationId: getAdminsettinglist
+    summary: List all settings (Admin)
+    description: Get all system settings
+    tags:
+      - Admin
+      - Settings
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Settings list retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                          type:
+                            type: string
+                          options:
+                            type: string
+                          group:
+                            type: integer
+                          flag:
+                            type: integer
+
+/api/admin/setting/get:
+  get:
+    operationId: getAdminsettingget
+    summary: Get setting by key (Admin)
+    description: Retrieve a specific setting value
+    tags:
+      - Admin
+      - Settings
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: key
+        in: query
+        required: true
+        schema:
+          type: string
+        example: site_title
+    responses:
+      '200':
+        description: Setting retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+
+/api/admin/setting/save:
+  post:
+    operationId: postAdminsettingsave
+    summary: Save settings (Admin)
+    description: Update one or more system settings
+    tags:
+      - Admin
+      - Settings
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+    responses:
+      '200':
+        description: Settings saved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/setting/delete:
+  post:
+    operationId: postAdminsettingdelete
+    summary: Delete setting (Admin)
+    description: Remove a custom setting
+    tags:
+      - Admin
+      - Settings
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - key
+            properties:
+              key:
+                type: string
+    responses:
+      '200':
+        description: Setting deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/setting/reset_token:
+  post:
+    operationId: postAdminsettingreset_token
+    summary: Reset API token (Admin)
+    description: Generate a new API token
+    tags:
+      - Admin
+      - Settings
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Token reset successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/meta/list:
+  get:
+    operationId: getAdminmetalist
+    summary: List all metas (Admin)
+    description: Get list of metadata configurations
+    tags:
+      - Admin
+      - Meta
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Metas list retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: object
+
+/api/admin/meta/get:
+  get:
+    operationId: getAdminmetaget
+    summary: Get meta by ID (Admin)
+    description: Retrieve specific metadata configuration
+    tags:
+      - Admin
+      - Meta
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Meta retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/meta/create:
+  post:
+    operationId: postAdminmetacreate
+    summary: Create meta (Admin)
+    description: Add new metadata configuration
+    tags:
+      - Admin
+      - Meta
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - path
+            properties:
+              path:
+                type: string
+              password:
+                type: string
+              readme:
+                type: string
+              header:
+                type: string
+              hide:
+                type: string
+    responses:
+      '200':
+        description: Meta created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/meta/update:
+  post:
+    operationId: postAdminmetaupdate
+    summary: Update meta (Admin)
+    description: Modify metadata configuration
+    tags:
+      - Admin
+      - Meta
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+              path:
+                type: string
+              password:
+                type: string
+              readme:
+                type: string
+              header:
+                type: string
+              hide:
+                type: string
+    responses:
+      '200':
+        description: Meta updated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/meta/delete:
+  post:
+    operationId: postAdminmetadelete
+    summary: Delete meta (Admin)
+    description: Remove metadata configuration
+    tags:
+      - Admin
+      - Meta
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+    responses:
+      '200':
+        description: Meta deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/index/build:
+  post:
+    operationId: postAdminindexbuild
+    summary: Build search index (Admin)
+    description: Build full-text search index for all storages
+    tags:
+      - Admin
+      - Search Index
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Index build started
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/index/update:
+  post:
+    operationId: postAdminindexupdate
+    summary: Update search index (Admin)
+    description: Update search index for specific paths
+    tags:
+      - Admin
+      - Search Index
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              paths:
+                type: array
+                items:
+                  type: string
+    responses:
+      '200':
+        description: Index update started
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/index/stop:
+  post:
+    operationId: postAdminindexstop
+    summary: Stop indexing (Admin)
+    description: Stop current indexing operation
+    tags:
+      - Admin
+      - Search Index
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Indexing stopped
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/index/clear:
+  post:
+    operationId: postAdminindexclear
+    summary: Clear search index (Admin)
+    description: Delete all search index data
+    tags:
+      - Admin
+      - Search Index
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Index cleared
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ApiResponse'
+
+/api/admin/index/progress:
+  get:
+    operationId: getAdminindexprogress
+    summary: Get indexing progress (Admin)
+    description: Check current indexing operation progress
+    tags:
+      - Admin
+      - Search Index
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Progress retrieved
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/ApiResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        total:
+                          type: integer
+                        current:
+                          type: integer
+                        status:
+                          type: string
